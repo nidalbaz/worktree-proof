@@ -1,12 +1,12 @@
 {
   "name": "opencode-plugin-computer-use",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "main": "src/index.js",
-  "description": "Computer Use automation — screenshot, mouse, keyboard, window management via nut-js",
+  "description": "Computer Use automation — screenshot, mouse, keyboard, window management via nut-js, plus chrome-bridge awareness for browser content via CDP over a no-port named pipe (or TCP fallback).",
   "opencode": {
     "name": "Computer Use",
-    "description": "Human-like computer automation — screenshot, mouse move/click/drag, keyboard type/press/combos, window management, OCR-ready",
+    "description": "Human-like computer automation — screenshot, mouse move/click/drag, keyboard type/press/combos, window management, plus chrome-bridge tools for browser content (tabs, evaluate, screenshot) over a no-port named pipe when available.",
     "commands": [
       { "name": "cu:screenshot", "description": "Take screenshot (full screen, region, or window)" },
       { "name": "cu:mouse_move", "description": "Move mouse to coordinates" },
@@ -20,22 +20,36 @@
       { "name": "cu:window_list", "description": "List open windows" },
       { "name": "cu:window_focus", "description": "Focus window by title/app" },
       { "name": "cu:window_bounds", "description": "Get/set window position/size" },
-      { "name": "cu:wait", "description": "Wait for milliseconds" }
+      { "name": "cu:wait", "description": "Wait for milliseconds" },
+      { "name": "cu:browser_tabs", "description": "List user's Chrome tabs via chrome-bridge" },
+      { "name": "cu:browser_activate", "description": "Focus a Chrome tab by id" },
+      { "name": "cu:browser_open", "description": "Open a new Chrome tab" },
+      { "name": "cu:browser_close", "description": "Close a Chrome tab" },
+      { "name": "cu:browser_evaluate", "description": "Evaluate JavaScript in a Chrome tab" },
+      { "name": "cu:browser_screenshot", "description": "Capture a Chrome tab via CDP" },
+      { "name": "cu:browser_bridge_status", "description": "Check chrome-bridge transport + extension version" }
     ],
     "tools": [
       { "name": "cu_screenshot", "description": "Take screenshot" },
       { "name": "cu_mouse_move", "description": "Move mouse" },
       { "name": "cu_mouse_click", "description": "Click mouse" },
       { "name": "cu_mouse_drag", "description": "Drag mouse" },
-      { "name": "cu_mouse_scroll", "description": "Scroll wheel" },
+      { "name": "cu_mouse_scroll", "description": "Scroll mouse wheel" },
       { "name": "cu_keyboard_type", "description": "Type text" },
       { "name": "cu_keyboard_press", "description": "Press key combo" },
       { "name": "cu_keyboard_hold", "description": "Hold key" },
-      { "name": "cu_keyboard_release", "description": "Release key" },
+      { "name": "cu_keyboard_release", "description": "Release held key" },
       { "name": "cu_window_list", "description": "List windows" },
       { "name": "cu_window_focus", "description": "Focus window" },
       { "name": "cu_window_bounds", "description": "Get/set window bounds" },
-      { "name": "cu_wait", "description": "Wait" }
+      { "name": "cu_wait", "description": "Wait" },
+      { "name": "cu_browser_tabs", "description": "List Chrome tabs via chrome-bridge" },
+      { "name": "cu_browser_activate", "description": "Focus a Chrome tab by id" },
+      { "name": "cu_browser_open", "description": "Open a new Chrome tab via the bridge" },
+      { "name": "cu_browser_close", "description": "Close a Chrome tab via the bridge" },
+      { "name": "cu_browser_evaluate", "description": "Evaluate JavaScript in a Chrome tab" },
+      { "name": "cu_browser_screenshot", "description": "Capture a Chrome tab via CDP" },
+      { "name": "cu_browser_bridge_status", "description": "Check chrome-bridge transport and extension version" }
     ]
   },
   "dependencies": {
