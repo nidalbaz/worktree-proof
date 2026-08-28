@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test test/"
+    "test": "node --test test/relay.test.mjs test/pipe.test.mjs"
   },
   "dependencies": {
     "ws": "^8.18.0"

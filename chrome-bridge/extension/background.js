@@ -10,12 +10,21 @@ const RECONNECT_ALARM_PERIOD_MIN = 0.5; // keep SW alive; MV3 SWs die after ~30s
 
 let ws = null;
 let reconnectDelayMs = 1000;
+// NOTE: debugger attachments SURVIVE service-worker death and relay restarts
+// (they live in the browser process, not here). Never bulk-clear this set on
+// socket loss — re-attach attempts must tolerate "already attached".
 let attachedTabs = new Set(); // tabId -> true (debugger attached)
 
 // ---------------------------------------------------------------------------
 // MV3 service-worker keep-alive (pattern copied from the ChatGPT/Codex
 // extension: chrome.alarms wakes the SW so the outbound WS survives).
 // ---------------------------------------------------------------------------
+
+// Top-level arming: runs on EVERY service-worker wake (alarm, event, startup),
+// so the reconnect alarm always exists even if onStartup/onInstalled never
+// fired in this browser session (e.g. extension loaded before relay existed).
+ensureReconnectAlarm();
+connect();
 
 chrome.runtime.onStartup.addListener(() => {
   ensureReconnectAlarm();
@@ -55,6 +64,11 @@ function connect() {
   ws = socket;
   socket.onopen = () => {
     reconnectDelayMs = 1000;
+    // Announce the loaded build so the relay/operator can verify an upgrade
+    // took effect. Cheap, no side effects.
+    try {
+      send({ type: "hello", version: chrome.runtime.getManifest().version });
+    } catch {}
     sendTabs();
   };
   socket.onmessage = (ev) => {
@@ -74,16 +88,50 @@ function connect() {
           error: { message: String((err && err.message) || err) },
         });
       });
+    } else if (msg.type === "manage") {
+      handleManage(msg).catch((err) => {
+        send({
+          type: "manage_error",
+          opId: msg.opId,
+          error: { message: String((err && err.message) || err) },
+        });
+      });
     } else if (msg.type === "ping") {
       send({ type: "pong" });
     } else if (msg.type === "getTabs") {
       sendTabs();
+    } else if (msg.type === "selfUpgrade") {
+      // Operator command from the relay: ask this service worker to reload so
+      // any newly-edited background.js takes effect without opening
+      // chrome://extensions. chrome.runtime.reload() only works for unpacked
+      // extensions; for CRX/CWS installs we toggle enabled state via
+      // chrome.management, which forces a real unload+reload.
+      try {
+        send({ type: "selfUpgradeAck", version: chrome.runtime.getManifest().version });
+      } catch {}
+      // Best-effort: try the in-process reload first; if it throws (e.g. on
+      // CWS-loaded extensions), fall back to disabling+re-enabling via the
+      // management API. Both paths terminate this SW; whichever wins, the
+      // next wake will run the new code and reconnect with `hello` on open.
+      try {
+        chrome.runtime.reload();
+      } catch {
+        try {
+          const id = chrome.runtime.id;
+          chrome.management.setEnabled(id, false, () => {
+            try { chrome.management.setEnabled(id, true, () => {}); } catch {}
+          });
+        } catch (e) {
+          try { send({ type: "selfUpgradeError", error: String((e && e.message) || e) }); } catch {}
+        }
+      }
     }
   };
   socket.onclose = () => {
     if (ws === socket) {
       ws = null;
-      attachedTabs.clear();
+      // Keep attachedTabs: debugger attaches survive SW death and relay
+      // restarts; clearing here causes "Already attached" errors later.
       scheduleReconnect();
     }
   };
@@ -123,8 +171,88 @@ async function handleCommand(msg) {
 
 async function ensureAttached(tabId) {
   if (attachedTabs.has(tabId)) return;
-  await chrome.debugger.attach({ tabId }, PROTOCOL_VERSION);
-  attachedTabs.add(tabId);
+  try {
+    await chrome.debugger.attach({ tabId }, PROTOCOL_VERSION);
+    attachedTabs.add(tabId);
+  } catch (e) {
+    const msg = String((e && e.message) || e);
+    // Attachments live in the browser process, so after a service-worker
+    // restart or relay reconnect Chrome may already hold an attach for this
+    // tab. That is success, not failure — record it and continue.
+    if (/already attached/i.test(msg)) {
+      attachedTabs.add(tabId);
+      return;
+    }
+    throw e;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tab management (relay -> extension, no debug port needed)
+// ---------------------------------------------------------------------------
+//
+// The relay translates HTTP-level requests (PUT /json/new, /json/close/<id>,
+// GET /json/activate/<id>) into "manage" messages. We translate those into
+// chrome.tabs.* APIs and reply with a "manage_result" or "manage_error"
+// envelope that includes the live tab snapshot. The relay then either
+// responds to the HTTP caller or refreshes its own tab cache.
+
+async function handleManage(msg) {
+  const { opId, action, params } = msg;
+  if (typeof opId !== "string" || !opId) {
+    throw new Error("chrome-bridge: manage requires opId");
+  }
+  const p = params || {};
+  if (action === "tabs.create") {
+    const createProps = {};
+    if (typeof p.url === "string" && p.url) createProps.url = p.url;
+    if (p.active === false) createProps.active = false; // default true
+    if (Number.isInteger(p.windowId)) createProps.windowId = p.windowId;
+    const tab = await chrome.tabs.create(createProps);
+    sendTabs();
+    send({
+      type: "manage_result",
+      opId,
+      tab: {
+        id: String(tab.id),
+        title: tab.title || "",
+        url: tab.url || (typeof p.url === "string" ? p.url : ""),
+        active: !!tab.active,
+        windowId: tab.windowId,
+      },
+    });
+    return;
+  }
+  if (action === "tabs.remove") {
+    if (!Number.isInteger(p.tabId)) {
+      throw new Error("chrome-bridge: tabs.remove requires integer tabId");
+    }
+    await chrome.tabs.remove(p.tabId);
+    attachedTabs.delete(p.tabId);
+    sendTabs();
+    send({ type: "manage_result", opId, tab: { id: String(p.tabId) } });
+    return;
+  }
+  if (action === "tabs.activate") {
+    if (!Number.isInteger(p.tabId)) {
+      throw new Error("chrome-bridge: tabs.activate requires integer tabId");
+    }
+    const tab = await chrome.tabs.update(p.tabId, { active: true });
+    sendTabs();
+    send({
+      type: "manage_result",
+      opId,
+      tab: {
+        id: String(tab.id),
+        title: tab.title || "",
+        url: tab.url || "",
+        active: !!tab.active,
+        windowId: tab.windowId,
+      },
+    });
+    return;
+  }
+  throw new Error(`chrome-bridge: unknown manage action: ${action}`);
 }
 
 chrome.debugger.onDetach.addListener((source) => {
