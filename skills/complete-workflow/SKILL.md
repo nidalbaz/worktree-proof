@@ -49,6 +49,14 @@ This injects the mandatory workflow preamble into every turn. Models that skip n
      `POST /self-upgrade` to ask the extension SW to reload itself
      (one-time manual reload at `chrome://extensions` is required the
      first time you upgrade the extension).
+     When the target is a web page in the user's normal Chrome, prefer
+     `chrome_*` (CDP) or `cu_browser_*` (computer-use chrome-bridge
+     tools — same bridge, added in computer-use v1.1.0) over raw
+     `cu_mouse_*` clicks: CDP is faster, immune to terminal
+     focus-stealing, and never opens a port for the agent. Reserve
+     `cu_mouse_*` / `cu_keyboard_*` / `cu_window_*` for the browser
+     chrome (URL bar, tab strip, settings) and for non-browser desktop
+     apps.
    - Visible desktop → `computer_*` tools.
    - Lanes/commands → `wp_run` (argv only, no shell).
    - Context/knowledge → the matching skill from the skill map
