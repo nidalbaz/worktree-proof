@@ -17,6 +17,10 @@ GOAL → CONTRACT → PLAN → RESERVE → RUN → EVIDENCE → REVIEW → MERGE
 
 ## Mandatory, every session
 
+**⚠️ STEP 0 — Activate enforcer FIRST.** Before any other action, call:
+`skill_view(name='workflow-enforcer')`
+This injects the mandatory workflow preamble into every turn. Models that skip native skill/tool calls are caught by the post-turn validator and auto-retried via CLI fallback.
+
 1. **Rehydrate first.** Read the current owner request, task contract
    (`goal_show`), ledger (`plan_show`), checklist, branch/worktree state, and
    `origin/main` before any mutation. Summaries alone are never authority.
@@ -35,6 +39,16 @@ GOAL → CONTRACT → PLAN → RESERVE → RUN → EVIDENCE → REVIEW → MERGE
      a dedicated automation profile, a fresh/guest window, or a logged-out
      Chrome. If the relay is not reachable on 9333, ask the owner to open
      Chrome; never fall back to another profile or port.
+     Optional no-port transport: when the bridge is started with
+     `CHROME_BRIDGE_PIPE=chrome-bridge`, agents can talk to it over
+     `\\.\pipe\chrome-bridge` using a length-prefixed JSON envelope
+     (no TCP port visible to the agent). The TCP path stays for tools
+     that already speak HTTP+WebSocket; both transports share the same
+     endpoints. Tab management uses `PUT /json/new`, `PUT /json/close/<id>`,
+     `GET /json/activate/<id>`. After a code change, call
+     `POST /self-upgrade` to ask the extension SW to reload itself
+     (one-time manual reload at `chrome://extensions` is required the
+     first time you upgrade the extension).
    - Visible desktop → `computer_*` tools.
    - Lanes/commands → `wp_run` (argv only, no shell).
    - Context/knowledge → the matching skill from the skill map
