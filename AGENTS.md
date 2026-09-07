@@ -82,6 +82,62 @@ If there is even a 1% chance a skill applies to your task, you MUST load and fol
 19. **Branch & Prune Exploration:** For ambiguous or complex bugs, spawn two isolated subagents to explore competing implementations in parallel. Evaluate both through the test suite, merge the solution with the minimal diff, and immediately delete the other branch.
 20. **Adversarial Review (Maker-Checker):** The subagent that authors the code cannot approve it. An adversarial reviewer agent inspects the final diff for architectural regressions, security holes, and code bloat before allowing a merge.
 
+## Autonomous Software Engineering & Anti-Fabrication Harness
+
+You operate strictly within an autonomous, zero-trust, deterministic software engineering loop. You are strictly forbidden from guessing, fabricating code, inserting placeholders, hardcoding fake/cached data, generating dead UI skeletons, or claiming verbal completion. Every action, state transition, and file mutation is governed by the following enforceable protocols.
+
+### 1. Anti-Fabrication, Anti-Stub & Dead Code Elimination
+* **Strict Anti-Stub Gate:** Never commit or output placeholder logic, stubs, or mock evasions. The following patterns trigger immediate rejection:
+  * Comments denoting incomplete work: `TODO`, `FIXME`, `/* implement later */`.
+  * Vacuous implementations: `pass`, `return;`, `return null;`, or empty function bodies (`() => {}`).
+  * Truncated replacements: `// ... rest of code remains the same ...`. Edits must use exact search/replace blocks or clean full-file rewrites.
+* **Dead UI Element Prohibition:** Every interactive component (buttons, inputs, toggles, dropdowns) must bind to functional event handlers (`onClick`, `onChange`, `onSubmit`) that mutate application state or trigger network/RPC calls. Cosmetic or non-functional elements that do not produce state changes are categorized as critical failures.
+* **Disk Persistence Verification:** Never declare a file modified without deterministic disk validation. Every write operation must be immediately verified via terminal checks:
+  * The file must exist and contain non-zero byte content: `test -s <file>`.
+  * The Git worktree must reflect exact line modifications: `git status --porcelain`.
+
+### 2. Dynamic Data Integrity & Anti-Hardcoding Shields
+* **Zero Hardcoded Metrics (No Magic Literals):** Writing literal numbers, currency strings, percentages, market indicators, or stock values inside JSX, HTML, or template strings (e.g., `<span>$12,450.00</span>`) is strictly prohibited.
+  * Every displayed metric must resolve dynamically from injected props, state, or hook streams (e.g., `{formatCurrency(ticker.lastPrice)}`).
+* **Randomized Dynamic Fuzzing:** All tests must inject non-deterministic, dynamically generated test fixtures (`faker.js`, `Math.random()`, or absurd values like `price: 999999.42`).
+  * If a UI component renders an accurate or real-world number that does not match the exact dynamically injected fuzz value, the task is rejected immediately for data fabrication.
+* **Sequential Stream & Lifecycle Enforcement:** Real-time and streaming components must prove two sequential states:
+  1. *Pre-Stream / Idle State:* Display an explicit empty/loading skeleton indicator (`-` or loading state) and zero numeric values before data arrives.
+  2. *Live Dynamic Update:* Prove that incoming tick events cause immediate DOM re-renders, value updates, and transient visual state changes (e.g., flash green on price tick up, flash red on tick down).
+
+### 3. Mandatory Interaction Testing & Dynamic Artifacts
+* **Visual Screenshots Are Not Standalone Proof:** Static visual regressions and successful compiler builds (`npm run build`) do not constitute task completion.
+* **Automated Video Artifacts:** Browser-based tasks must run inside an automated headless harness (Playwright/Cypress) configured to record session video (`recordVideo`).
+  * The recorded video must capture the complete operational lifecycle: initial render, dynamic data reception, user click/interaction, loading transition, and resulting DOM update.
+  * The execution log must output the deterministic path to the video artifact: `/artifacts/videos/<task_name>.webm`.
+* **State A / State B Snapshot Pairs:** Any visual verification must be submitted as two distinct, timestamped screenshots:
+  * *Snapshot A (Pre-Action / Idle):* Component before the event or stream update.
+  * *Snapshot B (Post-Action / Mutated):* Component reflecting user interaction, payload processing, or state transition. Single, static screenshots are invalid.
+* **Behavioral Assertion Over Presence:** Tests must trigger actual user actions (`await userEvent.click()`, `page.fill()`) and verify downstream state mutation, side effects, and correct callback invocations. Simply asserting element visibility (`expect(element).toBeVisible()`) is unacceptable.
+
+### 4. Test-Driven Enforcement & Test Immutability
+* **Reproduction-First (Red-Green TDD Loop):** Never modify production code before creating a reproduction test.
+  * Step 1: Write an automated test demonstrating the missing capability or reproducing the bug.
+  * Step 2: Execute the test to verify a non-zero exit code (deterministic failure).
+  * Step 3: Implement the minimal code fix until the exact same test passes (exit code `0`) without breaking existing test suites.
+* **Test Immutability Protection:** The agent implementing the feature or fix is strictly barred from modifying existing test files, weakening assertions, or removing checks to force an exit code `0`. Modifications to test fixtures require explicit Conductor authorization.
+
+### 5. Concurrency, Worktree Isolation & Rollback
+* **Conductor / Laborer Topology:** The parent orchestrator analyzes the codebase, enforces state machines, and delegates tasks. Subagents (`invoke_subagent`) perform isolated, single-file edits.
+* **Single-File Git Worktree Sandboxing:** Every subagent is isolated inside an ephemeral Git worktree strictly scoped to **exactly one file**. Cross-file edits on a single branch are forbidden.
+* **Strict Diff Budgeting:** Reject any change that contains formatting drift, whitespace modifications, unrequested refactoring, or reordered imports outside the assigned issue.
+* **Autonomous 3-Strike Rollback Trigger:** If a subagent fails to pass the test suite or syntax checks within 3 consecutive attempts, abort the trajectory immediately:
+  * Execute `git reset --hard` and destroy the isolated worktree.
+  * Re-evaluate the root cause from the Conductor thread before re-allocating.
+
+### 6. Repository Exploration, State Machine & Boundaries
+* **AST / Semantic Map First:** Explore repository architecture using the AST/symbol dependency graph (ctags/Tree-sitter). Never run unbounded recursive string searches (`grep -r`) across the entire repository.
+* **Windowed Reads & Log Truncation:**
+  * Files exceeding 100 lines must be inspected using bounded ranges (`read_file(path, offset, limit)`).
+  * Terminal outputs exceeding 80 lines must be truncated to reveal only the first 10 lines, explicit failure traces (`FAIL`, `stderr`, stack traces), and the final 10 lines.
+* **Persistent State Machine (`task_tracker.md`):** Maintain a disk-backed checklist. Formally track and commit state transitions (`PENDING` -> `IN_PROGRESS` -> `VERIFYING` -> `COMPLETED`). Never mark a parent task `COMPLETED` until all deterministic verification criteria, terminal tests, and interaction artifacts exist on disk.
+* **Proactive Action Boundaries ("Grill Me" Protocol):** Never guess missing architectural requirements, API contracts, or credentials. Halt execution and trigger an operator prompt modal immediately if specifications are incomplete or ambiguous.
+
 ## Command Code Unique Harness (Reverse-Engineered Core Architecture)
 
 1. **Strict Plan Mode Architecture & Read-Only Sandbox**:
