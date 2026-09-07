@@ -4,6 +4,7 @@
 - **Conductor / Dispatcher Pattern**: The primary agent acts as orchestrator and planner; helper subagents perform implementation typing and testing.
 - **Autonomous Stretch on Multi-Item Lists**: When an approved multi-item todo or plan is active, execute all remaining items back-to-back in one autonomous stretch. Do not stall or post intermediate recaps when pending items remain.
 - **Desktop-App / Live Verification First**: Never rely on unit test passes or repo state alone; verify live app behavior and runtime evidence.
+- **Account Switch & Zero-Amnesia Continuation**: When the owner switches account, refreshes quota, or rotates tokens (e.g., "switched acc", "new quota", "con", "/boost"), NEVER treat it as a context reset or wipe. The agent MUST read full context and prior tasks (`cin` and `con`) as if no switch occurred, preserve the subagent roster via `manage_subagents(Action: 'list')`, and immediately resume/re-spawn all parallel laborer tracks without stalling or single-threading.
 - **Headless & Direct Over Focus Fighting**: If desktop focus-fighting occurs, immediately switch to headless CDP, direct curl/API calls, or script checks.
 - **3-Strike Failure Rule**: Stop on the 3rd identical tool failure. Never make a 4th identical attempt without modifying parameters or diagnosing root cause.
 
@@ -137,6 +138,19 @@ You operate strictly within an autonomous, zero-trust, deterministic software en
   * Terminal outputs exceeding 80 lines must be truncated to reveal only the first 10 lines, explicit failure traces (`FAIL`, `stderr`, stack traces), and the final 10 lines.
 * **Persistent State Machine (`task_tracker.md`):** Maintain a disk-backed checklist. Formally track and commit state transitions (`PENDING` -> `IN_PROGRESS` -> `VERIFYING` -> `COMPLETED`). Never mark a parent task `COMPLETED` until all deterministic verification criteria, terminal tests, and interaction artifacts exist on disk.
 * **Proactive Action Boundaries ("Grill Me" Protocol):** Never guess missing architectural requirements, API contracts, or credentials. Halt execution and trigger an operator prompt modal immediately if specifications are incomplete or ambiguous.
+
+## Operational Anti-Patterns & Preventive Invariants (Post-Audit Hardening)
+
+Discovered from deep failure-class analysis (incident `cb9cab31-c387-49ff-ae55-fb9f3456bb9e`), the following 8 anti-patterns are strictly forbidden across all agents and workflows:
+
+1. **Account Switch Amnesia (Zero-Amnesia Continuation):** When the owner notifies of an account switch, quota refresh, or token rotation (e.g., "switched acc", "new quota", "con", "/boost"), NEVER treat it as a conversation reset or context wipe. The agent MUST rehydrate full prior context, tasks, and requirements (`cin` and `con`) exactly as if no switch occurred. Immediately inspect active subagents via `manage_subagents(Action: 'list')`, preserve the complete roster of working subagents, and resume parallel execution back-to-back without stalling or single-threading.
+2. **Laborer Role Inversion (No Meta-Auditing):** Subagents (`invoke_subagent`) must be strictly scoped laborers/mechanics with direct execution mandates (`write_to_file`, `replace_file_content`, `run_command`). Helper subagents must NEVER act as managers, meta-auditors, or planners. Orchestrators plan and dispatch; laborers write code, run tests, and return raw terminal receipts.
+3. **Zero-Proof "Enterprise Grade" Claims:** Strictly prohibit declaring "100% enterprise grade" or "fully complete" while code produces blank black pages, unclickable skeletons, or build failures. UI completion requires deterministic verification: HTTP 200 response, build exit code 0, and visual/DOM proof that the page rendered dynamic content without errors.
+4. **Anti-Mock Evasion on Upstream Services:** Never allow a test or verification suite to report "PASS" by catching errors and substituting mock data when upstream providers or brokers are logged out. If an upstream service is disconnected, the test must report honest authentication status (`AUTH_REQUIRED`), never a false green.
+5. **Non-Destructive Invariant Preservation:** When updating `AGENTS.md`, guidelines, or skills, NEVER overwrite, truncate, or drop existing rules, developer profiles, or tools. Updates must append, refine, and harmonize—never amputate.
+6. **Omnipresent Multi-App Rule Propagation:** Harness updates and operational rules must never be confined to a local git repository. Rules must be synchronized across all application user config directories (`~/.gemini/config`, `~/.commandcode`, `~/.codex`) and canonical repository mirrors.
+7. **Proactive Chrome Bridge Attachment:** Always utilize the owner's pre-authenticated Chrome Bridge (`\\.\pipe\chrome-bridge` or port 9333 via `opencode-plugin-chrome-use`) for live verification and browser checks rather than asking for credentials that are already logged in on the host.
+8. **Full-Stack Multi-Domain Decomposition:** When the owner requests platform-wide end-to-end completion, never get trapped in a single file or single subsystem (e.g., only editing frontend widgets). Parallelize across distinct tracks (Frontend, Edge/API, VPS Services, Database) using conductor/laborer swarms.
 
 ## Command Code Unique Harness (Reverse-Engineered Core Architecture)
 
