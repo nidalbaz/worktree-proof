@@ -47,6 +47,8 @@ Use WorktreeProof to make parallel work explicit, isolated, and terminally audit
 ## Taste Behavioral Adaptation System
 
 - **Category Learnings**: Adhere to discovered owner preferences and repo facts (`# <category>` with confidence scores).
+- **Tools Default**: The user's personal Chrome Bridge (`\\.\pipe\chrome-bridge` or port 9333 via `opencode-plugin-chrome-use`) and Computer Use tools (`opencode-plugin-computer-use`) are the MANDATORY DEFAULT choice for browser and desktop automation across all apps. Always prioritize `chrome_*` tools over generic browser automation or port-based CDP.
 - **Target Account**: `nidalbaz` (git push targets `https://github.com/nidalbaz/<repo>.git`).
 - **Live Verification First**: Desktop-app and live runtime evidence overrides synthetic assumptions.
 - **Zero New Bills**: Token-waste is a defect; leverage free tiers and self-hosted runners.
+

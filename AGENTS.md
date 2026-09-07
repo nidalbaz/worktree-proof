@@ -108,7 +108,9 @@ If there is even a 1% chance a skill applies to your task, you MUST load and fol
    - Never invent benefits or capabilities; discover real behaviors through local file inspection and reverse engineering.
 2. **Authoritative Developer Profiles**:
    - GitHub Account: `nidalbaz` (migrated from Nedal7707). Local clones target `https://github.com/nidalbaz/<repo>.git`.
+   - Tools Default: The user's personal Chrome Bridge (`\\.\pipe\chrome-bridge` or port 9333 via `opencode-plugin-chrome-use`) and Computer Use tools (`opencode-plugin-computer-use`) are the MANDATORY DEFAULT choice across all apps. Browser tasks must always prioritize `chrome_*` tools on the bridge (zero-port named pipe, no debug flags) over generic browser automation or port-based CDP.
    - Desktop-App / Live Verification First: A change is not done until verified in the live app/runtime.
+
    - Zero New Bills: Prefer free tiers, self-hosted Oracle runners, and existing infrastructure. Token-waste is a defect.
    - Secret Hygiene: Never print, log, or commit secret values. Send tokens only via headers or environment variables.
    - Exact Naming: Provider and service naming must be exact (`opencode-go`, `model_pool`, `deepseek-v4-pro`).
