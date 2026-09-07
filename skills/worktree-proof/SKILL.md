@@ -32,3 +32,21 @@ Use WorktreeProof to make parallel work explicit, isolated, and terminally audit
 - If a reservation conflicts, a receipt is malformed, or state is stale, stop the lane and report the precise reason.
 - Never force cleanup, rewrite another lane's receipt, or claim completion without validation evidence.
 - Stop at permanent owner gates (credentials, live broker orders, billing); never guess.
+
+## Command Code Harness & Plan Mode Discipline
+
+- **Strict Plan Mode**: When in plan mode, work is strictly read-only. All modifying tools and commands are locked. The only writable target is `~/.commandcode/plans/<name>.md`.
+- **5-Phase Execution Flow**:
+  1. Explore: Windowed, AST-guided exploration (<=100 lines per file slice).
+  2. Clarify: Mandatory requirement verification before design ("Grill Me" protocol).
+  3. Design: Define architectural boundaries, minimal viable diff, and rollback plans.
+  4. Plan: Write formal implementation plan with deterministic verification criteria.
+  5. Exit & Handoff: Request user approval before beginning any implementation.
+- **Tool Authority**: Trust tool output and state as authoritative; never simulate or assume.
+
+## Taste Behavioral Adaptation System
+
+- **Category Learnings**: Adhere to discovered owner preferences and repo facts (`# <category>` with confidence scores).
+- **Target Account**: `nidalbaz` (git push targets `https://github.com/nidalbaz/<repo>.git`).
+- **Live Verification First**: Desktop-app and live runtime evidence overrides synthetic assumptions.
+- **Zero New Bills**: Token-waste is a defect; leverage free tiers and self-hosted runners.
