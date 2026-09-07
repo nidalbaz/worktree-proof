@@ -1,0 +1,11 @@
+{
+  "name": "opencode-plugin-cc-bridge",
+  "version": "0.1.0",
+  "description": "Bridges Command Code's architectural benefits (taste, skills, plan mode, deferred tools, hooks) into OpenCode sessions",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "src/index.js",
+  "dependencies": {
+    "@opencode-ai/plugin": "1.18.16"
+  }
+}

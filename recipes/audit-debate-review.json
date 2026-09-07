@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "1.0",
+  "id": "audit-debate-review",
+  "name": "Audit → Multi-model review → Debate",
+  "description": "Orchestrator-only lane: audits one surface, dispatches the SAME task to 2-3 free models in parallel for review, then runs a debate to converge. Work routes through worktree-proof internal lanes only.",
+  "outcomes": [
+    { "id": "audit", "description": "Surface, trust boundaries, inputs, abuse cases, intended mitigations are explicit.", "evidence": ["threat note", "scope review"] },
+    { "id": "review", "description": "2-3 free models review the same scope in parallel; consensus + diff is recorded.", "evidence": ["model comparison table", "accepted findings"] },
+    { "id": "debate", "description": "Disagreements between models are debated to a single resolution record.", "evidence": ["debate transcript", "resolution"] },
+    { "id": "close", "description": "Closure receipt with redacted evidence.", "evidence": ["closure receipt"] }
+  ],
+  "prerequisites": [
+    { "id": "scope", "description": "One bounded, non-overlapping fileScope is named before any work.", "check": "worktree-proof reserve --dry-run confirms no overlap" },
+    { "id": "baseline", "description": "Current surface behavior and trust boundaries are identified.", "check": "Identify the target scope and baseline ref before dispatch." }
+  ],
+  "lanes": [
+    { "laneId": "audit-surface", "fileScope": "notes/audit", "objective": "Map trust boundaries, inputs, identities, abuse cases.", "mode": "audit", "dependsOn": [], "deliverables": ["threat note"], "commands": ["git status --short"] },
+    { "laneId": "review-multimodel", "fileScope": "review/multi-model", "objective": "Dispatch SAME task to 2-3 free models (baichat, opencode-go, zenmux) in parallel; compare outputs.", "mode": "audit", "dependsOn": ["audit-surface"], "deliverables": ["model comparison table"], "commands": ["git diff --stat"] },
+    { "laneId": "debate-resolution", "fileScope": "resolution/debate", "objective": "Debate disagreements between models; record single resolution.", "mode": "audit", "dependsOn": ["review-multimodel"], "deliverables": ["debate transcript", "resolution"], "commands": ["git log -1 --oneline"] }
+  ],
+  "toolCapabilities": ["inspect", "edit", "test", "evidence", "receipt"],
+  "qualityGates": [
+    { "id": "scope-unique", "description": "fileScope is non-overlapping.", "evidence": ["worktree-proof reserve output"] },
+    { "id": "multi-model", "description": "At least 2 models reviewed; consensus/diff recorded.", "evidence": ["comparison table"] },
+    { "id": "resolution", "description": "Debate yielded a documented resolution.", "evidence": ["resolution file"] },
+    { "id": "closed", "description": "wp_close receipt emitted.", "evidence": ["closure receipt"] }
+  ],
+  "ownerConfirmationBoundaries": [
+    { "id": "credentials", "action": "Enter password, 2FA, OTP, captcha, passkey.", "boundary": "Stop; hand entry to the owner.", "requiresConfirmation": true, "reason": "Human-only boundary." },
+    { "id": "live-impact", "action": "Apply destructive data or live account changes during review.", "boundary": "Stop and request owner confirmation.", "requiresConfirmation": true, "reason": "Audit review must not mutate live state." }
+  ],
+  "rollbackRescue": {
+    "rollbackPlan": "Preserve the review comparison and resolution notes; abandon unresolved dispute branches without merging.",
+    "rescueSteps": [
+      "Preserve the comparison notes and the exact reviewed scope.",
+      "Document the specific disagreement points and unresolved findings.",
+      "Mark the lane abandoned if multi-model consensus cannot be reached."
+    ],
+    "stopConditions": [
+      "Disagreements involve conflicting security assertions that cannot be validated.",
+      "The scope requires modifying untouchable guards or production credentials.",
+      "A protected owner confirmation boundary is reached."
+    ]
+  },
+  "closureReceiptRequirements": {
+    "requiredFields": ["laneId", "outcome", "closedAt", "canonicalRef", "evidence"],
+    "evidence": ["threat note", "comparison table", "resolution", "closure receipt"],
+    "redactionRules": ["Never include credentials, tokens, private paths, or sensitive payloads."],
+    "terminalOutcomes": ["merged", "abandoned"]
+  }
+}

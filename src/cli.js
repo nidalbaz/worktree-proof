@@ -49,6 +49,8 @@ const COMMANDS = Object.freeze([
   'tasks',
   'manifest',
   'migrate',
+  'taste',
+  'skills',
 ]);
 
 const VALUE_OPTIONS = new Set([
@@ -118,6 +120,10 @@ const VALUE_OPTIONS = new Set([
   '--artifact',
   '--backup-root',
   '--client',
+  '--category',
+  '--learning',
+  '--confidence',
+  '--name',
 ]);
 
 const BOOLEAN_OPTIONS = new Set([
@@ -210,6 +216,10 @@ const VALUE_KEY_MAP = Object.freeze({
   artifact: 'artifact',
   backuproot: 'backupRoot',
   client: 'client',
+  category: 'category',
+  learning: 'learning',
+  confidence: 'confidence',
+  name: 'name',
 });
 
 const BOOLEAN_KEY_MAP = Object.freeze({
@@ -241,6 +251,7 @@ const MODULE_FILES = Object.freeze({
   resources: 'resources.js',
   bridge: 'bridge.js',
   tasks: 'tasks.js',
+  'cc-bridge': 'cc-bridge/cli.js',
 });
 
 /** A usage error is rendered by the caller, rather than printed here. */
@@ -403,6 +414,8 @@ function usage() {
     '  tasks inspect --input <host-snapshot.json>',
     '  manifest preview [generic|codex|claude] (public, preview-only)',
     '  migrate preview|apply --home <path> --artifact <manifest.json> [--clients <ids>]',
+    '  taste show|learn <category> <learning> [--confidence 0.9] [--scope global|project]',
+    '  skills list|expand <name>',
     '',
     'Global options:',
     '  --repo <path>       Repository root (default: current directory)',
@@ -1426,6 +1439,35 @@ async function invokeAdapter(deps, command, payload, input) {
     const scopeFn = findExport(deps.scope, ['validateLane', 'validate']);
     if (scopeFn && input !== undefined) return await scopeFn(input);
     return await validateLocalState(payload.repo, payload, deps, payload.options.input ?? payload.options.receipt ?? payload.positionals[0]);
+  }
+
+  // --- Command Code bridge commands (taste + skills) ---
+  if (command === 'taste' || command === 'skills') {
+    const bridgeCli = deps['cc-bridge'];
+    if (!bridgeCli) return { supported: false, command, reason: 'cc-bridge adapter unavailable' };
+    const action = payload.positionals[0];
+    if (command === 'taste') {
+      if (action === 'show' || action === undefined) {
+        return await bridgeCli.tasteShowCommand(payload);
+      }
+      if (action === 'learn') {
+        payload.options.category = payload.options.category ?? payload.positionals[1];
+        payload.options.learning = payload.options.learning ?? payload.positionals[2];
+        return await bridgeCli.tasteLearnCommand(payload);
+      }
+      throw new CliUsageError(`unknown taste action: ${action}. Use 'show' or 'learn'.`);
+    }
+    if (command === 'skills') {
+      if (action === 'list' || action === undefined) {
+        return await bridgeCli.skillsListCommand(payload);
+      }
+      if (action === 'expand') {
+        payload.options.name = payload.options.name ?? payload.positionals[1];
+        if (!payload.options.name) throw new CliUsageError('skills expand requires a skill name');
+        return await bridgeCli.skillsExpandCommand(payload);
+      }
+      throw new CliUsageError(`unknown skills action: ${action}. Use 'list' or 'expand'.`);
+    }
   }
 
   return await invokeFirst(deps, command, payload);

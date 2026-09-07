@@ -232,3 +232,140 @@ Together these practices enforce the clean-architecture dependency rule: the
 workflow's proof domain remains independent of Git, shells, browsers, and
 providers, while adapters make every external observation explicit and
 auditable.
+
+## §11 Taste-1 Continuous Learning Integration
+
+WorktreeProof V3 integrates CommandCode's **taste-1** meta neuro-symbolic AI
+model with continuous reinforcement learning as an optional enhancement layer.
+This is not a required dependency — the workflow operates fully without it — but
+when enabled, taste-1 provides a persistent learning loop that improves workflow
+execution over time.
+
+### 11.1 What taste-1 Adds
+
+taste-1 learns from every WorktreeProof execution:
+
+- **Task contract patterns** (§2): Which gate definitions work, which scopes
+  cause conflicts, how users structure outcomes
+- **Terminal ledger signals** (§3): Which evidence types satisfy gates,
+  which verifiers are reliable, common failure modes
+- **Helper delegation patterns** (HELPER_POLICY): Optimal lane counts,
+  scope partitioning, resource allocation strategies
+- **Circuit breaker behavior** (§5): Which errors are recoverable,
+  which require new contracts, optimal retry bounds
+- **Recovery patterns** (§9): Fastest rehydration paths, common
+  mismatch types, effective blocker resolution
+
+### 11.2 Taste Package Structure
+
+When enabled, WorktreeProof creates a `.worktree-proof/taste/` directory:
+
+```
+.worktree-proof/
+└── taste/
+    ├── taste.md              # Main taste file (project-level)
+    ├── contracts/
+    │   └── taste.md          # Task contract patterns
+    ├── ledger/
+    │   └── taste.md          # Terminal gate patterns
+    ├── helpers/
+    │   └── taste.md          # Delegation patterns
+    ├── breakers/
+    │   └── taste.md          # Circuit breaker patterns
+    └── recovery/
+        └── taste.md          # Recovery patterns
+```
+
+Each `taste.md` follows the CommandCode taste package format:
+```markdown
+# taste.md — workflow contracts
+
+## Learned Patterns
+
+### contract.scope
+- **Pattern**: Narrow file scopes reduce merge conflicts
+- **Signal**: 47 accepts, 3 rejects
+- **Confidence**: 0.94
+
+### contract.gates
+- **Pattern**: Named gates with verifier commands close faster
+- **Signal**: 31 accepts, 1 reject
+- **Confidence**: 0.97
+```
+
+### 11.3 Integration Points
+
+| WorktreeProof Component | Taste Signal Emitted | Learning Applied |
+|-------------------------|---------------------|------------------|
+| `wp_reserve` (lane reservation) | `delegation.scope` | Suggests optimal file scopes |
+| `wp_run` (lane execution) | `execution.tools` | Recommends tool sequences |
+| `wp_close` (lane closure) | `terminal.evidence` | Learns gate satisfaction patterns |
+| Circuit breaker trip | `breaker.failure` | Adjusts retry bounds |
+| `recovery.rehydrate` | `recovery.path` | Predicts rehydration issues |
+| `wp_cleanup` | `cleanup.pattern` | Optimizes ref deletion order |
+
+### 11.4 Configuration
+
+Enable in WorktreeProof config (`.worktree-proof/config.yaml` or global):
+
+```yaml
+taste:
+  enabled: true
+  provider: "commandcode"        # or "local" for offline
+  apiKey: "${TASTE_API_KEY}"     # optional, for remote sync
+  baseUrl: "https://api.commandcode.ai/provider/v1"
+  packages:
+    - contracts
+    - ledger
+    - helpers
+    - breakers
+    - recovery
+  learningMode: "continuous"     # or "session-only"
+  shareWithTeam: true
+  scope: "project"               # project|global|team
+```
+
+### 11.5 Commands
+
+```bash
+# Enable taste learning
+wp taste enable
+
+# Disable taste learning
+wp taste disable
+
+# Push taste to remote (team sharing)
+wp taste push --all
+
+# Pull taste from team
+wp taste pull team/worktree-proof
+
+# List packages
+wp taste list
+
+# Open in editor
+wp taste open contracts
+```
+
+### 11.6 Local-First Operation
+
+If no API key is configured, taste runs entirely locally:
+- Stores patterns in `.worktree-proof/taste/`
+- Uses local embeddings for pattern matching
+- No external network calls
+- Full privacy, zero dependency
+
+### 11.7 Portability
+
+Taste packages are portable across:
+- **Projects**: Pull/push between repos
+- **Teams**: Share via `wp taste pull team/name`
+- **Machines**: Global packages at `~/.worktree-proof/taste/`
+- **Remote**: Cloud at `commandcode.ai/username/taste`
+
+### 11.8 Non-Goals
+
+- Taste never becomes an authority gate (HELPER_POLICY §10)
+- Taste never blocks lane creation or mutation
+- Taste signals are advisory only; contracts remain immutable
+- Taste learning is opt-in; disabled by default

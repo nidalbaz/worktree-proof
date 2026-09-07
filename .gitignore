@@ -16,8 +16,12 @@ Thumbs.db
 *.tgz
 *.local
 *.tmp
-# Untracked local skill dumps (not part of the package)
-taste/
-
+*.log
+ll
+msg-*.json
+scratchpad/
+.claude/
+.hermes/
 .opencode/
 goal-plan.json
+taste/

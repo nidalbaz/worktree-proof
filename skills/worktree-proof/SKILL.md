@@ -3,30 +3,32 @@ name: worktree-proof
 description: Coordinate bounded coding-agent lanes with explicit scopes, reservations, run records, and closure receipts. Use when parallel work needs conflict checks, auditable handoffs, stale-lane cleanup, or deterministic validation.
 ---
 
-# WorktreeProof
+# WorktreeProof (Fable 5.1 & L99 Invariant)
 
-Use WorktreeProof to make parallel work explicit and terminally auditable. Keep the lane identifier, relative file scope, command outcome, and closure evidence together.
+Use WorktreeProof to make parallel work explicit, isolated, and terminally auditable. Keep the lane identifier, relative file scope, command outcome, and closure evidence together.
 
 ## Workflow
 
-1. Inspect project instructions and run `worktree-proof doctor`.
-2. Describe one bounded objective with `worktree-proof plan`.
-3. Reserve a unique lane and non-overlapping relative scope with `worktree-proof reserve`.
-4. Run only reviewed commands through `worktree-proof run`; keep credentials out of arguments and output.
-5. Use `worktree-proof status` to expose active, released, and awaiting-closure lanes.
-6. Attach checks and redacted evidence with `worktree-proof close`. A branch or commit is not a closure.
-7. Use `worktree-proof release` for abandoned work and `worktree-proof cleanup --dry-run` before removing stale state.
-8. Finish with `worktree-proof validate` and preserve the resulting receipt.
+1. **Rehydrate & Doctor**: Inspect current task contract and run `worktree-proof doctor`.
+2. **Pre-Task Interceptor**: Run the Self-Interrogation Loop (Task, specialized skills, guards) before code mutations.
+3. **Plan & Bound**: Describe one bounded objective with `worktree-proof plan` using unique normalized lane IDs.
+4. **Reserve & Isolate**: Reserve a unique lane and non-overlapping relative scope with `worktree-proof reserve`. Keep subagents isolated to separate worktrees.
+5. **Execute Safely**: Run only reviewed commands through `worktree-proof run`; keep credentials out of arguments and output. Never enable arbitrary shells.
+6. **Status & Circuit Breakers**: Use `worktree-proof status` to inspect active lanes. Enforce the F13 circuit breaker (freeze at 40 calls without terminal closure) and the 3-strike failure rule.
+7. **Close with Evidence**: Attach deterministic checks and redacted evidence with `worktree-proof close`. A branch or commit is not a closure.
+8. **Release & Clean**: Use `worktree-proof release` for abandoned work and `worktree-proof cleanup --dry-run` before removing stale state. Preserve dirty checkouts for rescue.
 
-## Scope discipline
+## Scope Discipline & Invariants
 
 - Normalize scopes relative to the project root and reject traversal.
 - Treat a file and its parent directory as overlapping; reject both while active.
 - Keep one objective per lane and never infer ownership from a plan alone.
+- Conductor dispatches, laborers type. Helpers never become authority gates or decision makers.
 - Prefer JSON output for automation and human-readable output for review.
 
-## Failure handling
+## Failure Handling & Autonomous Rollback
 
-If a reservation conflicts, a receipt is malformed, or state is stale, stop the lane and report the precise reason. Do not force cleanup, rewrite another lane's receipt, or claim completion without validation evidence.
-
-Read the project's architecture and threat-model notes when a command or receipt format changes. Keep this skill concise; load only the referenced document needed for the current decision.
+- **3-Strike Rollback Trigger**: On the third identical tool failure, stop, execute `git reset --hard` or delete the worktree cleanly, and report the root cause.
+- If a reservation conflicts, a receipt is malformed, or state is stale, stop the lane and report the precise reason.
+- Never force cleanup, rewrite another lane's receipt, or claim completion without validation evidence.
+- Stop at permanent owner gates (credentials, live broker orders, billing); never guess.

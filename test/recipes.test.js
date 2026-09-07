@@ -13,6 +13,7 @@ const manifestPath = path.join(templatesRoot, 'tool-manifest.json');
 const expectedRecipeIds = [
   'accessibility',
   'api',
+  'audit-debate-review',
   'bug-fix',
   'ci-repair',
   'database-migration',

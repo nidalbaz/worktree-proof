@@ -92,6 +92,7 @@ const plugins = [
   ["worktreeproof-worktree-proof", "opencode-plugin-worktree-proof"],
   ["worktreeproof-workflow-enforcement", "opencode-plugin-workflow-enforcement"],
   ["worktreeproof-telegram", "opencode-plugin-telegram"],
+  ["worktreeproof-cc-bridge", "opencode-plugin-cc-bridge"],
 ];
 
 const SKILLS_TO_INSTALL = [

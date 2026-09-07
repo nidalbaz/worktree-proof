@@ -42,7 +42,7 @@ test('worktree-proof-stack uses the canonical minimal Agent Skill structure', as
   assert.ok(defaultPrompt?.includes(`$${skillName}`));
 
   const entries = await readdir(skillDirectory, { withFileTypes: true });
-  assert.deepEqual(entries.map((entry) => entry.name).sort(), ['SKILL.md', 'agents']);
+  assert.deepEqual(entries.map((entry) => entry.name).sort(), ['SKILL.md', 'agents', 'references']);
   const agentEntries = await readdir(path.join(skillDirectory, 'agents'), { withFileTypes: true });
   assert.deepEqual(agentEntries.map((entry) => entry.name).sort(), ['openai.yaml']);
 });

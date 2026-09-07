@@ -55,8 +55,16 @@ All WorktreeProof-owned skills (11) are always available; upstream libraries
 
 | Action | Plugin / tool |
 |---|---|
-| Any browser/web task | `chrome_*` tools — **ONLY via the Chrome Bridge extension relay** (`chrome_connect` endpoint `http://127.0.0.1:9333`; extension ID `epppjbfmmabiphlgeokdichnhhklabep` in the user's normal no-port Chrome). The 9222 debug-port "Chrome portal" is retired for browser automation; port 9222 is Token-Free Gateway only (never automate, never kill). Never a dedicated automation profile, guest/incognito, or logged-out Chrome. |
-| Any visible desktop task | `computer_*` tools (screenshot, mouse, keyboard, windows) |
+| Any browser/web task | `chrome_*` tools from `integrations/opencode-plugin-chrome-use` — **ONLY via the Chrome Bridge extension relay** (`chrome_connect` endpoint `http://127.0.0.1:9333`; extension ID `epppjbfmmabiphlgeokdichnhhklabep` in the user's normal no-port Chrome). The 9222 debug-port "Chrome portal" is retired for browser automation; port 9222 is Token-Free Gateway only (never automate, never kill). Never a dedicated automation profile, guest/incognito, or logged-out Chrome. |
+| Any visible desktop task | `computer_*` tools from `integrations/opencode-plugin-computer-use` (screenshot, mouse, keyboard, windows via nut-js) |
+
+Both plugins are registered as OpenCode plugins: live config
+`~/.config/opencode/opencode.jsonc` (`plugin` array) and repo
+`.opencode/opencode.jsonc`. Prefer `chrome_*` for anything inside a browser;
+fall back to `computer_*` only for non-browser desktop apps or when the relay
+is down — and per the owner's UI-automation lesson, if desktop clicking keeps
+losing focus fights, switch to headless verification instead of looping.
+
 | Lane lifecycle | `wp_plan`, `wp_reserve`, `wp_run`, `wp_close`, `wp_release`, `wp_status`, `wp_validate` |
 | Goal/contract/ledger | `goal_set`, `plan_create`, `task_start`, `task_done` (evidence required), `review_gate`, `review_summary` |
 | Diagnostics | `wp_doctor`, `wp_capabilities`, `wp_cleanup`, `wp_leases`, `wp_tools`, `wp_recipes`, `wp_resources` |

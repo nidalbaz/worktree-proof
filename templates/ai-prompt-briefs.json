@@ -15,6 +15,12 @@
       "receiptFocus": ["contract cases", "compatibility result", "redaction status"]
     },
     {
+      "recipeId": "audit-debate-review",
+      "prompt": "Orchestrate a multi-model audit and debate workflow. Map trust boundaries and abuse cases, dispatch the same scope to 2-3 free models in parallel for review, and debate disagreements to a single documented resolution record. Keep lanes non-overlapping, credentials out of commands, and emit a closure receipt with verified evidence.",
+      "antiGoals": ["Do not spawn unconstrained subagents from the main agent.", "Do not hide disagreements between models without resolution."],
+      "receiptFocus": ["threat note", "model comparison table", "debate resolution", "closure receipt"]
+    },
+    {
       "recipeId": "bug-fix",
       "prompt": "Use a prove-it workflow for the reported bug. Capture the smallest reproduction, identify the expected state, and write a focused regression check before changing behavior. Split reproduction, fix, and verification into non-overlapping scopes. Keep the patch narrow, inspect the diff, run the focused check and the relevant suite, and leave a rescue note if the cause remains uncertain.",
       "antiGoals": ["Do not hide the bug by weakening an assertion.", "Do not mix cleanup or unrelated refactoring into the fix."],
