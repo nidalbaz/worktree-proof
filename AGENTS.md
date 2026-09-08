@@ -50,7 +50,7 @@ If there is even a 1% chance a skill applies to your task, you MUST load and fol
 3. **Output Truncation & Noise Reduction:** Intercept all terminal and build outputs. If stdout/stderr exceeds 80 lines, prune everything except the first 10 lines, critical failure traces (`FAIL`, `stderr`, stack traces), and the final 10 lines.
 
 ### II. PRE-FLIGHT INTERCEPTION & STATE CONTROL
-4. **Proactive Action Boundaries ("Grill Me" Protocol):** Never guess missing requirements or assume architectural decisions. If parameters, credentials, or specifications are ambiguous, halt immediately and trigger an operator modal.
+4. **Proactive Action Boundaries ("Grill Me" Protocol):** Never guess missing requirements or assume architectural decisions. If parameters, credentials, or specifications are ambiguous, halt immediately and trigger an operator modal. If my instructions are ambiguous, ask me to clarify before proceeding!
 5. **Pre-Task Interceptor (Self-Interrogation Loop):** Before invoking execution or file modification tools, answer:
    - What deterministic condition defines task completion?
    - What existing functionality could break?
